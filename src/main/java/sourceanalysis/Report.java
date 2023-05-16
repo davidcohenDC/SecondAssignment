@@ -1,22 +1,25 @@
 package sourceanalysis;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class Report {
 
-    private final Map<Integer, List<Path>> reportData;
+    private final ConcurrentMap<Integer, List<Path>> reportData;
 
     public Report(Map<Integer, List<Path>> reportData) {
-        this.reportData = reportData;
+        if(reportData == null) {
+            throw new IllegalArgumentException("Report data cannot be null");
+        }
+        this.reportData = new ConcurrentHashMap<>(reportData);
     }
 
     public static Report mergeReports(Report report1, Report report2) {
         Map<Integer, List<Path>> mergedData = new HashMap<>(report1.getReportData());
         report2.getReportData().forEach((key, value) ->
-                mergedData.merge(key, value, (list1, list2) -> {
+                mergedData.merge(key, new ArrayList<>(value), (list1, list2) -> {
                     list1.addAll(list2);
                     return list1;
                 }));
@@ -24,7 +27,16 @@ public class Report {
     }
 
     public Map<Integer, List<Path>> getReportData() {
-        return reportData;
+        return Collections.unmodifiableMap(reportData);
+    }
+
+    public List<Path> getPathsForReport(Integer reportId) {
+        return reportData.getOrDefault(reportId, Collections.emptyList());
+    }
+
+    public void addPathToReport(Integer reportId, Path path) {
+        reportData.putIfAbsent(reportId, new ArrayList<>());
+        reportData.get(reportId).add(path);
     }
 
 }
