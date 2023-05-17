@@ -188,8 +188,6 @@ public class AnalyzerGUI {
         }
         this.startButton.setEnabled(true);
         this.stopButton.setEnabled(false);
-        maxFilesArea.setText("");
-        distributionArea.setText("");
     }
 
     private void showErrorDialog(String message) {

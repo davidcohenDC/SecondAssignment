@@ -45,6 +45,6 @@ public class TestOnConsole {
             reportDisposable.dispose(); // Dispose del Disposable per terminare l'osservazione
         }
 
-        Thread.sleep(6000);
+        Thread.sleep(10000);
     }
 }

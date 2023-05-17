@@ -26,7 +26,7 @@ public class FileProcessor {
                     Flowable<String> lines = Flowable.fromIterable(linesStream::iterator);
                     return lines
                             .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("//"))  // ignore empty lines
-                            .filter(line -> !line.matches(".*/*.*"))  // ignore inline comments
+                            .filter(line -> !line.matches(".*\\*\\/.*"))  // ignore inline comments
                             .count()  // count the remaining lines
                             .toFlowable()
                             .map(lineCount -> {
