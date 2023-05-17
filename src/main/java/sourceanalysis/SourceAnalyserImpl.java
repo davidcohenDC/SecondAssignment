@@ -5,29 +5,26 @@ import io.reactivex.rxjava3.core.Single;
 import java.nio.file.Path;
 
 public class SourceAnalyserImpl implements SourceAnalyser {
-
     private final PathCrawler pathCrawler;
     private final FileProcessor fileProcessor;
-
     private final int numIntervals;
     private final int maxLines;
+    private final Path directory;
 
-
-
-    public SourceAnalyserImpl(PathCrawler pathCrawler, FileProcessor fileProcessor, int numIntervals, int maxLines) {
+    public SourceAnalyserImpl(PathCrawler pathCrawler, FileProcessor fileProcessor, int numIntervals, int maxLines, Path directory) {
         this.pathCrawler = pathCrawler;
         this.fileProcessor = fileProcessor;
         this.numIntervals = numIntervals;
         this.maxLines = maxLines;
+        this.directory = directory;
     }
 
     /**
      * Analyze the sources in the given directory
-     * @param directory the directory to analyze
      * @return the report of the analysis
      */
     @Override
-    public Single<Report> getReport(Path directory) {
+    public Single<Report> getReport() {
         Flowable<Path> pathFlowable = pathCrawler.crawlDirectory(directory);
         return fileProcessor.processFiles(pathFlowable, numIntervals, maxLines).lastOrError();
     }
@@ -35,11 +32,10 @@ public class SourceAnalyserImpl implements SourceAnalyser {
     /**
      * Analyze the sources in the given directory with incremental analysis of
      * results and is stoppable
-     * @param directory the directory to analyze
      * @return the report of the analysis
      */
     @Override
-    public Flowable<Report> analyzeSources(Path directory) {
+    public Flowable<Report> analyzeSources() {
         Flowable<Path> pathFlowable = pathCrawler.crawlDirectory(directory);
         return fileProcessor.processFiles(pathFlowable, numIntervals, maxLines);
     }

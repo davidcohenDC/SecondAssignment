@@ -2,8 +2,6 @@ package sourceanalysis;
 
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,44 +11,38 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class FileProcessor {
-
-
     public Flowable<Report> processFiles(Flowable<Path> pathFlowable, int numIntervals, int maxLines) {
         return pathFlowable
-                .flatMap(path -> processFile(path, numIntervals, maxLines))
+                .subscribeOn(Schedulers.computation())
+                .flatMap(path -> processFile(path, numIntervals, maxLines),10)
+//                .subscribeOn(Schedulers.computation())
                 .scan(Report::mergeReports);
     }
+
     private Flowable<Report> processFile(Path path, int numIntervals, int maxLines) {
-        try (Stream<String> lines = Files.lines(path)) {
-            long lineCount = lines
-                    .filter(line -> !line.trim().isEmpty())  // ignore empty lines
-                    .filter(line -> !line.trim().startsWith("//"))  // ignore single-line comments
-                    .filter(line -> !line.trim().startsWith("/*"))  // ignore single-line comments
-                    .filter(line -> !line.trim().endsWith("/*"))  // ignore single-line comments
-                    .count();  // count the remaining lines
+        return Flowable.using(
+                () -> Files.lines(path),
+                linesStream -> {
+                    Flowable<String> lines = Flowable.fromIterable(linesStream::iterator);
+                    return lines
+                            .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("//"))  // ignore empty lines
+                            .filter(line -> !line.matches(".*/*.*"))  // ignore inline comments
+                            .count()  // count the remaining lines
+                            .toFlowable()
+                            .map(lineCount -> {
+                                int interval = numIntervals;
+                                if (lineCount < maxLines) {
+                                    interval = (int) (long) lineCount / (maxLines / numIntervals);
+                                }
 
-            int interval = numIntervals;
-            if (lineCount < maxLines) {
-                interval = (int) lineCount / (maxLines / numIntervals);
-            }
+                                Map<Integer, List<Path>> reportData = new HashMap<>();
+                                reportData.computeIfAbsent(interval, k -> new ArrayList<>()).add(path);
 
-            System.out.println("| Interval: " + interval);
-
-            Map<Integer, List<Path>> reportData = new HashMap<>();
-            reportData.computeIfAbsent(interval, k -> new ArrayList<>()).add(path);
-
-            Report report = new Report(reportData);
-            // Stampa l'informazione richiesta in un altro thread
-            Flowable.just(report)
-                    .observeOn(Schedulers.io())
-                    .subscribe(r -> r.getReportData().forEach((k, v) -> {
-                        System.out.println("Interval: " + k + "| Files: " + v.size());
-                    }));
-
-            return Flowable.just(report);
-        } catch (IOException e) {
-            return Flowable.error(e);
-        }
+                                return new Report(reportData);
+                            });
+                },
+                Stream::close
+        ).subscribeOn(Schedulers.io());
     }
 
 }
