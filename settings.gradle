@@ -9,3 +9,4 @@
  */
 
 rootProject.name = "SecondAssignment"
+include('app')
