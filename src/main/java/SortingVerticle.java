@@ -1,4 +1,6 @@
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 
 import java.util.Comparator;
@@ -19,6 +21,7 @@ public class SortingVerticle extends AbstractVerticle {
     public void start() {
         EventBus eb = this.getVertx().eventBus();
         eb.consumer("name-and-lines", entry -> {
+            System.out.println("poke");
             FileEntry fileEntry = (FileEntry) entry.body();
             this.files.add(fileEntry);
             if (this.files.size() > this.maxTopFiles)
@@ -28,3 +31,4 @@ public class SortingVerticle extends AbstractVerticle {
         });
     }
 }
+

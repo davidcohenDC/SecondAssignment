@@ -16,8 +16,8 @@ public class CountingVerticle extends AbstractVerticle {
                 if (result.succeeded()) {
                     if (file.getName().endsWith(".java")){
                         try (var lines = Files.lines(file.toPath(), StandardCharsets.UTF_8)) {
-                            System.out.println("Counting...");
                             FileEntry nextEntry = new FileEntry(file.getPath(), lines.count());
+                            System.out.println(nextEntry);
                             eb.publish("name-and-lines", nextEntry);
                         } catch (Exception ignore) {
                         }

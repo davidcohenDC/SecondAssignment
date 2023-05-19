@@ -10,11 +10,11 @@ public class MainApplication {
 
     public static void main(String[] args) throws InterruptedException {
         Vertx vertx = Vertx.vertx();
-        DeploymentOptions options = new DeploymentOptions().setConfig(new JsonObject().put("message", System.getProperty("user.home") + "/Desktop"));
-        Handler<AsyncResult<String>> activation;
-        vertx.deployVerticle(new WolkerVerticle(new File("C:\\Users\\mikim")), options, res -> {
-            vertx.deployVerticle(new CountingVerticle(), res2 -> {
-                vertx.deployVerticle(new SortingVerticle(5, 1000, 10), options);
+        DeploymentOptions options = new DeploymentOptions();
+        vertx.deployVerticle(new ComputingVerticle(5, 1000, 10), onFinish -> {
+            vertx.deployVerticle(new WolkerVerticle(), onDone -> {
+                EventBus eventBus = vertx.eventBus();
+                eventBus.publish("file-to-explore", new File("C:\\Users\\mikim\\Desktop\\PCD\\SecondAssignment\\src\\main\\java"));
             });
         });
     }
