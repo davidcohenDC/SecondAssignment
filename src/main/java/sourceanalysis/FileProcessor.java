@@ -11,10 +11,16 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class FileProcessor {
+
+    private final int maxConcurrency;
+
+    public FileProcessor(int maxConcurrency) {
+        this.maxConcurrency = maxConcurrency;
+    }
     public Flowable<Report> processFiles(Flowable<Path> pathFlowable, int numIntervals, int maxLines) {
         return pathFlowable
                 .subscribeOn(Schedulers.computation())
-                .flatMap(path -> processFile(path, numIntervals, maxLines),10)
+                .flatMap(path -> processFile(path, numIntervals, maxLines),maxConcurrency)
 //                .subscribeOn(Schedulers.computation())
                 .scan(Report::mergeReports);
     }
@@ -25,8 +31,7 @@ public class FileProcessor {
                 linesStream -> {
                     Flowable<String> lines = Flowable.fromIterable(linesStream::iterator);
                     return lines
-                            .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("//"))  // ignore empty lines
-                            .filter(line -> !line.matches(".*\\*\\/.*"))  // ignore inline comments
+                            .filter(FileValidationUtils::isValidLine)
                             .count()  // count the remaining lines
                             .toFlowable()
                             .map(lineCount -> {
@@ -41,7 +46,8 @@ public class FileProcessor {
                                 return new Report(reportData);
                             });
                 },
-                Stream::close
+                Stream::close,
+                true
         ).subscribeOn(Schedulers.io());
     }
 

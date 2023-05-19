@@ -27,11 +27,12 @@ public class TestOnConsole {
             System.exit(1);
         }
 
+        int numCores = Runtime.getRuntime().availableProcessors()+1;
         SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(
-                new PathCrawler(), new FileProcessor(), numIntervals, maxLength, dir.toPath());
+                new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dir.toPath());
 
         Disposable reportDisposable = sourceAnalyser.getReport()
-                .flatMapPublisher(report -> new ReportTransformer(maxFiles).apply(Flowable.just(report)))
+                .flatMapPublisher(report ->new ReportTransformer(maxFiles).apply(Flowable.just(report)))
                 .toList()
                 .subscribe(
                         pair -> {

@@ -29,14 +29,4 @@ public class Report {
     public Map<Integer, List<Path>> getReportData() {
         return Collections.unmodifiableMap(reportData);
     }
-
-    public List<Path> getPathsForReport(Integer reportId) {
-        return reportData.getOrDefault(reportId, Collections.emptyList());
-    }
-
-    public void addPathToReport(Integer reportId, Path path) {
-        reportData.putIfAbsent(reportId, new ArrayList<>());
-        reportData.get(reportId).add(path);
-    }
-
 }
