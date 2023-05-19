@@ -38,12 +38,13 @@ public class ComputingVerticle extends AbstractVerticle {
             results.onComplete((AsyncResult<Long> r) -> {
                 FileEntry fileEntry = new FileEntry(((File) message.body()).getPath(), r.result());
                 this.files.add(fileEntry);
+                System.out.println(this.files + " " + this.files.size());
                 if (this.files.size() > this.maxTopFiles) {
                     this.files.remove(this.files.last());
                 }
                 int bucketIdx = (int)Math.min(r.result() / this.bucketSize, this.buckets.length-1);
                 this.buckets[bucketIdx]++;
-                System.out.println(fileEntry);
+                eb.publish("counted", 1);
             });
         });
     }
