@@ -1,7 +1,5 @@
 import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.disposables.Disposable;
 import sourceanalysis.*;
-
 import java.io.File;
 
 public class TestOnConsole {
@@ -31,21 +29,15 @@ public class TestOnConsole {
         SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(
                 new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dir.toPath());
 
-        Disposable reportDisposable = sourceAnalyser.getReport()
+        sourceAnalyser.getReport()
                 .flatMapPublisher(report ->new ReportTransformer(maxFiles).apply(Flowable.just(report)))
                 .toList()
-                .subscribe(
+                .blockingSubscribe(
                         pair -> {
                             System.out.println("Received final distribution: " + pair.get(0).getLeft());
                             System.out.println("Received final max files: " + pair.get(0).getRight());
                         },
                         error -> System.err.println("Error occurred: " + error)
                 );
-
-        if (reportDisposable.isDisposed()) {
-            reportDisposable.dispose(); // Dispose del Disposable per terminare l'osservazione
-        }
-
-        Thread.sleep(10000);
     }
 }

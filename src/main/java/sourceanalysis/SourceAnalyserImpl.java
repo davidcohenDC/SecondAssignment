@@ -45,7 +45,6 @@ public class SourceAnalyserImpl implements SourceAnalyser {
                 .onErrorReturn(this::onError);
     }
 
-
     private Flowable<Report> analyzeAndReport() {
         Flowable<Path> pathFlowable = pathCrawler.crawlDirectory(directory);
         return fileProcessor.processFiles(pathFlowable, numIntervals, maxLines);
