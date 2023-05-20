@@ -1,10 +1,12 @@
-package approccio_02_virtual_threads.source_analyser;
+package approccio_01_task;
 
-import approccio_02_virtual_threads.boundedbuffer.Distribution;
-import approccio_02_virtual_threads.chrono.Chrono;
+import approccio_01_task.boundedbuffer.Distribution;
+import approccio_01_task.source_analyser.DirectoryWalkerParams;
+import approccio_01_task.source_analyser.Report;
+import approccio_01_task.source_analyser.SourceAnalyser;
+import approccio_01_task.source_analyser.SourceAnalyserImpl;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -16,7 +18,7 @@ public class TestOnConsole {
     public static final int NUM_INTERVALS = 10;
     public static final int MAX_LINES = 1000;
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
 
         /*if (args.length != WalkerArguments.ARGUMENTS_SIZE.getValue()) {
             System.out.println("Usage: <max number of files> <directory> <number of intervals> <max number of lines>");
@@ -48,14 +50,11 @@ public class TestOnConsole {
                 .build();
 
         SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params);
-        Chrono chrono = new Chrono();
-        chrono.start();
         Future<Report> report = sourceAnalyser.getReport();
-        chrono.stop();
 
         System.out.println("\nThe distribution of files is:\n" + report.get().getDistribution());
         System.out.println("\nThe files with the highest number of lines are: \n" + report.get().getMaxFiles());
-        System.out.println("\nTime to execute the operations: " + chrono.getTime() + " (milliseconds)");
+        //System.out.println("\nTime to execute the operations: " + crono.getTime() + " (milliseconds)");
         System.exit(0);
     }
 }

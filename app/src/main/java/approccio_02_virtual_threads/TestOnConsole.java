@@ -1,6 +1,11 @@
-package approccio_01_task.source_analyser;
+package approccio_02_virtual_threads;
 
-import approccio_01_task.boundedbuffer.Distribution;
+import approccio_02_virtual_threads.boundedbuffer.Distribution;
+import approccio_02_virtual_threads.chrono.Chrono;
+import approccio_02_virtual_threads.source_analyser.DirectoryWalkerParams;
+import approccio_02_virtual_threads.source_analyser.Report;
+import approccio_02_virtual_threads.source_analyser.SourceAnalyser;
+import approccio_02_virtual_threads.source_analyser.SourceAnalyserImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,11 +52,14 @@ public class TestOnConsole {
                 .build();
 
         SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params);
+        Chrono chrono = new Chrono();
+        chrono.start();
         Future<Report> report = sourceAnalyser.getReport();
+        chrono.stop();
 
         System.out.println("\nThe distribution of files is:\n" + report.get().getDistribution());
         System.out.println("\nThe files with the highest number of lines are: \n" + report.get().getMaxFiles());
-        //System.out.println("\nTime to execute the operations: " + crono.getTime() + " (milliseconds)");
+        System.out.println("\nTime to execute the operations: " + chrono.getTime() + " (milliseconds)");
         System.exit(0);
     }
 }
