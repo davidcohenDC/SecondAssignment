@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 public class TestPerformance {
     public static void main(String[] args) {
-        int[] coreCounts = { 1, 2, 4, 8, Runtime.getRuntime().availableProcessors()+1 }; // Array contenente il numero di core su cui eseguire i test
+        int[] coreCounts = { 1, 2, 4, 8, Runtime.getRuntime().availableProcessors()*2 }; // Array contenente il numero di core su cui eseguire i test
         if (args.length != Constants.Arguments.ARGUMENTS_SIZE) {
             System.out.println("Usage: <directory> <number of intervals> <max length of interval>");
             System.exit(1);
