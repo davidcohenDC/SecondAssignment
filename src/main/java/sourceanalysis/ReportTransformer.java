@@ -9,13 +9,19 @@ public class ReportTransformer  implements FlowableTransformer<Report, Pair<Stri
 
     private final int maxFiles;
 
-    public ReportTransformer(int maxFiles) {
+    private final int maxLines;
+
+    private final int numInterval;
+
+    public ReportTransformer(int maxFiles, int numInterval, int maxLines) {
         this.maxFiles = maxFiles;
+        this.maxLines = maxLines;
+        this.numInterval = numInterval;
     }
     @Override
     public @NonNull Publisher<Pair<String, String>> apply(@NonNull Flowable<Report> upstream) {
         return upstream.map(report -> {
-            String distributionString = ReportPrinter.getDistributionString(report);
+            String distributionString = ReportPrinter.getDistributionString(report, numInterval, maxLines);
             String maxFilesString = ReportPrinter.getMaxFilesString(report, maxFiles);
             return Pair.of(distributionString, maxFilesString);
         });

@@ -30,7 +30,7 @@ public class TestOnConsole {
                 new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dir.toPath());
 
         sourceAnalyzer.getReport()
-                .flatMapPublisher(report ->new ReportTransformer(maxFiles).apply(Flowable.just(report)))
+                .flatMapPublisher(report ->new ReportTransformer(maxFiles, numIntervals, maxLength).apply(Flowable.just(report)))
                 .toList()
                 .blockingSubscribe(
                         pair -> {

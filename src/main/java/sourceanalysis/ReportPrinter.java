@@ -2,17 +2,25 @@ package sourceanalysis;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
-
 public class ReportPrinter {
 
-    public static String getDistributionString(Report report) {
+    public static String getDistributionString(Report report, int numIntervals, int maxLines) {
+        int intervalSize = maxLines / numIntervals;
+        int remainingLines = maxLines % numIntervals;
         StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Integer, List<Path>> entry : report.getReportData().entrySet()) {
-            int interval = entry.getKey();
-            List<Path> files = entry.getValue();
-            sb.append("Interval: ").append(interval).append(", Files: ").append(files.size()).append("\n");
+
+        int lowerBound = 0;
+        int upperBound = intervalSize;
+        for (int i = 0; i < numIntervals; i++) {
+            if (i < remainingLines) {
+                upperBound += 1;
+            }
+            sb.append("[").append(lowerBound).append(", ").append(upperBound).append("]: ").append(report.getFilesCount(i)).append("\n");
+            lowerBound = upperBound + 1;
+            upperBound += intervalSize;
         }
+        sb.append("[").append(lowerBound).append(", inf]: ").append(report.getFilesCount(numIntervals)).append("\n");
+
         return sb.toString();
     }
 

@@ -29,4 +29,9 @@ public class Report {
     public Map<Integer, List<Path>> getReportData() {
         return Collections.unmodifiableMap(reportData);
     }
+
+    public int getFilesCount(int interval) {
+        List<Path> files = reportData.get(interval);
+        return files != null ? files.size() : 0;
+    }
 }

@@ -178,7 +178,7 @@ public class AnalyzerGUI {
         stopButton.setEnabled(true);
         int numCores = Runtime.getRuntime().availableProcessors()+1;
         SourceAnalyzerImpl analyser = new SourceAnalyzerImpl(new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dirPath);
-        Flowable<Pair<String, String>> resultFlowable = analyser.analyzeSources().compose(new ReportTransformer(maxFiles));
+        Flowable<Pair<String, String>> resultFlowable = analyser.analyzeSources().compose(new ReportTransformer(maxFiles, numIntervals, maxLength));
 
         reportSubscription = resultFlowable.subscribe(this::handleOnNext, this::handleError, this::handleCompletion);
     }

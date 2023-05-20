@@ -48,7 +48,7 @@ public class TestPerformance {
         SourceAnalyzerImpl sourceAnalyser = new SourceAnalyzerImpl(pathCrawler, fileProcessor, numIntervals, maxLength, directory);
 
         sourceAnalyser.getReport()
-                .flatMapPublisher(report ->new ReportTransformer(maxFiles).apply(Flowable.just(report)))
+                .flatMapPublisher(report ->new ReportTransformer(maxFiles, numIntervals, maxLength).apply(Flowable.just(report)))
                 .toList()
                 .blockingSubscribe(
                         pair -> {
