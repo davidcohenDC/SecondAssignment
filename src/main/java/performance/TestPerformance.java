@@ -1,10 +1,14 @@
+package performance;
+
 import io.reactivex.rxjava3.core.Flowable;
 import sourceanalysis.*;
+
 import java.io.File;
+import java.nio.file.Path;
 
-public class TestOnConsole {
-
+public class TestPerformance {
     public static void main(String[] args) {
+        int[] coreCounts = { 1, 2, 4, 8, Runtime.getRuntime().availableProcessors()+1 }; // Array contenente il numero di core su cui eseguire i test
         if (args.length != Constants.Arguments.ARGUMENTS_SIZE) {
             System.out.println("Usage: <directory> <number of intervals> <max length of interval>");
             System.exit(1);
@@ -25,11 +29,25 @@ public class TestOnConsole {
             System.exit(1);
         }
 
-        int numCores = Runtime.getRuntime().availableProcessors()+1;
-        SourceAnalyzer sourceAnalyzer = new SourceAnalyzerImpl(
-                new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dir.toPath());
+        for (int cores : coreCounts) {
+            System.out.println("=== Testing with " + cores + " cores ===");
+            long totalTime = runBenchmark(cores,dir.toPath(), numIntervals, maxLength, maxFiles);
+            System.out.println("Total time: " + totalTime + "ms\n");
+        }
+    }
 
-        sourceAnalyzer.getReport()
+    private static long runBenchmark(int cores, Path directory, int numIntervals, int maxLength, int maxFiles) {
+        Cron benchmarkCron = new Cron();
+        benchmarkCron.start();
+
+        // Crea una istanza di FileProcessor con il numero di core specificato
+        FileProcessor fileProcessor = new FileProcessor(cores);
+
+        // Crea un'istanza di SourceAnalyserImpl con le dipendenze necessarie
+        PathCrawler pathCrawler = new PathCrawler();
+        SourceAnalyzerImpl sourceAnalyser = new SourceAnalyzerImpl(pathCrawler, fileProcessor, numIntervals, maxLength, directory);
+
+        sourceAnalyser.getReport()
                 .flatMapPublisher(report ->new ReportTransformer(maxFiles).apply(Flowable.just(report)))
                 .toList()
                 .blockingSubscribe(
@@ -39,5 +57,9 @@ public class TestOnConsole {
                         },
                         error -> System.err.println("Error occurred: " + error)
                 );
+
+        benchmarkCron.stop();
+        return benchmarkCron.getTime();
     }
+
 }

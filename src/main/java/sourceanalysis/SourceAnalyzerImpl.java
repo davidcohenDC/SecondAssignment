@@ -5,14 +5,14 @@ import io.reactivex.rxjava3.core.Single;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-public class SourceAnalyserImpl implements SourceAnalyser {
+public class SourceAnalyzerImpl implements SourceAnalyzer {
     private final PathCrawler pathCrawler;
     private final FileProcessor fileProcessor;
     private final int numIntervals;
     private final int maxLines;
     private final Path directory;
 
-    public SourceAnalyserImpl(PathCrawler pathCrawler, FileProcessor fileProcessor, int numIntervals, int maxLines, Path directory) {
+    public SourceAnalyzerImpl(PathCrawler pathCrawler, FileProcessor fileProcessor, int numIntervals, int maxLines, Path directory) {
         if (pathCrawler == null || fileProcessor == null || directory == null) {
             throw new IllegalArgumentException("Parameters cannot be null");
         }
