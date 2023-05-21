@@ -1,9 +1,20 @@
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Vertx;
+import io.vertx.core.eventbus.EventBus;
+
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
-/*public class AnalyserGUI {
+import static java.lang.Integer.parseInt;
+
+public class AnalyserGUI {
 
     private final JTextField directoryField;
     private final JTextField maxFilesField;
@@ -13,13 +24,13 @@ import java.nio.file.Paths;
     private final JButton stopButton;
     private final JTextArea maxFilesArea;
     private final JTextArea distributionArea;
-
-    private Disposable reportSubscription;
+    private final Vertx vertx = Vertx.vertx();
+    private EventBus eventBus = vertx.eventBus();
 
     /**
      * Creation of the GUI
      */
-  /*  public AnalyserGUI() {
+    public AnalyserGUI() {
         JFrame frame = new JFrame("Java Walker");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setPreferredSize(new Dimension(800, 600));
@@ -140,7 +151,7 @@ import java.nio.file.Paths;
 
         int maxLength;
         try {
-            maxLength = Integer.parseInt(maxLengthField.getText().trim());
+            maxLength = parseInt(maxLengthField.getText().trim());
         } catch (NumberFormatException e) {
             showErrorDialog("Invalid value for max length: " + maxLengthField.getText().trim());
             return;
@@ -148,7 +159,7 @@ import java.nio.file.Paths;
 
         int maxFiles;
         try {
-            maxFiles = Integer.parseInt(maxFilesField.getText().trim());
+            maxFiles = parseInt(maxFilesField.getText().trim());
         } catch (NumberFormatException e) {
             showErrorDialog("Invalid value for max files: " + maxFilesField.getText().trim());
             return;
@@ -156,7 +167,7 @@ import java.nio.file.Paths;
 
         int numIntervals;
         try {
-            numIntervals = Integer.parseInt(numIntervalsField.getText().trim());
+            numIntervals = parseInt(numIntervalsField.getText().trim());
             if(numIntervals > maxLength) {
                 JOptionPane.showMessageDialog
                         (null, "Invalid value for num intervals: " + numIntervalsField.getText().trim()
@@ -172,18 +183,43 @@ import java.nio.file.Paths;
 
         startButton.setEnabled(false);
         stopButton.setEnabled(true);
-        int numCores = Runtime.getRuntime().availableProcessors()+1;
-        SourceAnalyserImpl analyser = new SourceAnalyserImpl(new PathCrawler(), new FileProcessor(numCores), numIntervals, maxLength, dirPath);
-        Flowable<Pair<String, String>> resultFlowable = analyser.analyzeSources().compose(new ReportTransformer(maxFiles));
+        vertx.deployVerticle(new StatusChecker(), done -> {
+            vertx.deployVerticle(new ComputingVerticle(parseInt(numIntervalsField.getText()), parseInt(maxLengthField.getText()), parseInt(maxFilesField.getText())), onFinish -> {
+                vertx.deployVerticle(new WalkerVerticle(), onDone -> {
+                    eventBus.publish("file-to-explore", new File(directoryField.getText()));
+                });
+            });
+        });
+        //eventBus.consumer("all-done",  message -> {
+          //  vertx.close();
+        //});
+        SwingUtilities.invokeLater(() -> {
+            eventBus.consumer("distributions", results -> {
+                final var distribution = (HashMap<Integer, Integer>) results.body();
+                distributionArea.setText(distribution.toString().replace("{", " ").replace("}", "").replace(",", "\n").replace("=", "... = "));
+            });
+            eventBus.consumer("topFiles", result -> {
+                final var topFiles = result.body();
+                maxFilesArea.setText((topFiles.toString()));
+            });
+        });
 
-        reportSubscription = resultFlowable.subscribe(this::handleOnNext, this::handleError, this::handleCompletion);
     }
 
+
+
     private void stopWalker() {
-        if (reportSubscription != null && !reportSubscription.isDisposed()) {
-            reportSubscription.dispose();
+        eventBus.publish("all-done", 1);
+        var future = CompletableFuture.runAsync(() -> {
+            vertx.close();
+        });
+        try {
+            future.get();
+            System.out.println("Vertex chiuso con successo.");
+            this.startButton.setEnabled(true);
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Si è verificato un errore durante la chiusura del vertex: " + e.getMessage());
         }
-        this.startButton.setEnabled(true);
         this.stopButton.setEnabled(false);
     }
 
@@ -194,7 +230,7 @@ import java.nio.file.Paths;
         });
     }
 
-    private void handleError(Throwable t) {
+    /*private void handleError(Throwable t) {
         SwingUtilities.invokeLater(() -> showErrorDialog(t.getMessage()));
     }
 
@@ -203,10 +239,10 @@ import java.nio.file.Paths;
             distributionArea.setText(pair.getLeft());
             maxFilesArea.setText(pair.getRight());
         });
-    }
+    }*/
 
 
     private void handleCompletion() {
         SwingUtilities.invokeLater(this::stopWalker);
     }
-}*/
+}

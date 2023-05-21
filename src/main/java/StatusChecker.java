@@ -9,7 +9,6 @@ public class StatusChecker extends AbstractVerticle {
         EventBus eventBus = this.vertx.eventBus();
         eventBus.consumer("file-to-count", message -> {
             this.counter = this.counter + 1;
-            System.out.println(counter);
         });
         eventBus.consumer("counted", message -> {
             this.counter = this.counter - 1;
@@ -17,5 +16,8 @@ public class StatusChecker extends AbstractVerticle {
         if (this.counter == 0) {
             eventBus.publish("all-done", 1);
         }
+        eventBus.consumer("all-done", msg -> {
+           vertx.close();
+        });
     }
 }

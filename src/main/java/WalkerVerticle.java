@@ -1,10 +1,8 @@
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import java.io.File;
 
-public class WolkerVerticle extends AbstractVerticle {
+public class WalkerVerticle extends AbstractVerticle {
 
     public void start() {
         EventBus eventBus = this.vertx.eventBus();
@@ -23,6 +21,9 @@ public class WolkerVerticle extends AbstractVerticle {
                     eventBus.publish("file-to-count", dir);
                 }
             }
+        });
+        eventBus.consumer("all-done", msg -> {
+           vertx.close();
         });
     }
 }
