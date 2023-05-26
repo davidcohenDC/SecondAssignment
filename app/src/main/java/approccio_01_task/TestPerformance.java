@@ -7,7 +7,7 @@ import approccio_01_task.utils.PerformanceUtils;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,11 +16,10 @@ import java.util.concurrent.Future;
 
 public class TestPerformance {
 
-    public static final int NUM_ITERATION = 5;
     public static final String DIRECTORY = "C:\\Users\\HP\\Desktop\\UNIBO\\LaureaMagistrale";
     public static final int MAX_FILES = 10;
     public static final int NUM_INTERVALS = 10;
-    public static final int MAX_LINES = 1000;
+    public static final int MAX_LINES = 100;
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
 
@@ -53,36 +52,27 @@ public class TestPerformance {
                 .distribution(distribution)
                 .build();
 
-        //int maxThread = PerformanceUtils.getDefaultNumThread();
-        Map<Integer, List<Double>> performance = new HashMap<>();
-        List<Double> stepsRatioWaitComputeTime = new ArrayList<>(List.of(0.0, 0.2, 0.4, 0.6, 0.8, 1.0));
+        Map<Integer, Long> performance = new HashMap<>();
+        List<Double> stepsRatioWaitComputeTime = List.of(0.0, 0.2, 0.4, 0.6, 0.8, 1.0);
         for (Double step : stepsRatioWaitComputeTime) {
-            List<Double> times = new ArrayList<>();
-            for (int i = 0; i < NUM_ITERATION; i++) {
-                int nThread = PerformanceUtils.getNumberThread(PerformanceUtils.getNumberCpu(), 1, step);
-                Chrono crono = new Chrono();
-                crono.start();
-                try {
-                    SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params);
-                    Future<Report> report = sourceAnalyser.getReport();
-
-                    System.out.println("\nThe distribution of files is:\n" + report.get().getDistribution());
-                    System.out.println("\nThe files with the highest number of lines are: \n" + report.get().getMaxFiles());
-                    crono.stop();
-                    times.add((double) crono.getTime());
-                    performance.put(nThread, times);
-                } catch (ExecutionException | InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+            int poolSize = PerformanceUtils.getNumberThread(PerformanceUtils.getNumberCpu(), 1, step);
+            long time = runBenchmark(params, poolSize);
+            performance.put(poolSize, time);
         }
+        performance.forEach((k, v) -> System.out.println("poolSize " + k + ": " + v + " (ms)"));
+        long min = performance.values().stream().min(Comparator.naturalOrder()).get();
+        System.out.println("\nmin time: " + min);
+        System.exit(0);
+    }
 
-        for (Map.Entry<Integer, List<Double>> p : performance.entrySet()) {
-            double avg = p.getValue().stream()
-                            .mapToDouble(d -> d)
-                            .average()
-                            .orElse(0.0);
-            System.out.println("nThread " + p.getKey() + " " + p.getValue().toString() + " avg: " + avg);
-        }
+    private static long runBenchmark(DirectoryWalkerParams params, int poolSize) throws InterruptedException, ExecutionException {
+        Chrono crono = new Chrono();
+        crono.start();
+        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params, poolSize);
+        Future<Report> futureReport = sourceAnalyser.getReport();
+        futureReport.get(); // report result ignored
+        //futureReport.cancel(true);
+        crono.stop();
+        return crono.getTime();
     }
 }

@@ -8,19 +8,20 @@ import approccio_02_virtual_threads.source_analyser.SourceAnalyser;
 import approccio_02_virtual_threads.source_analyser.SourceAnalyserImpl;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class TestOnConsole {
+public class TestPerformance {
 
+    public static final int NUM_ITERATION = 5;
     public static final String DIRECTORY = "C:\\Users\\HP\\Desktop\\UNIBO\\LaureaMagistrale";
     public static final int MAX_FILES = 10;
     public static final int NUM_INTERVALS = 10;
-    public static final int MAX_LINES = 1000;
+    public static final int MAX_LINES = 100;
 
-    public static void main(String[] args) throws ExecutionException, InterruptedException, IOException {
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
 
         /*if (args.length != WalkerArguments.ARGUMENTS_SIZE.getValue()) {
             System.out.println("Usage: <max number of files> <directory> <number of intervals> <max number of lines>");
@@ -51,16 +52,26 @@ public class TestOnConsole {
                 .distribution(distribution)
                 .build();
 
-        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params);
-        Chrono chrono = new Chrono();
-        chrono.start();
-        Future<Report> futureReport = sourceAnalyser.getReport();
-        Report report = futureReport.get();
-        chrono.stop();
-
-        System.out.println("\nThe distribution of files is:\n" + report.getDistribution());
-        System.out.println("\nThe files with the highest number of lines are: \n" + report.getMaxFiles());
-        System.out.println("\nTime to execute the operations: " + chrono.getTime() + " (milliseconds)");
+        List<Double> performance = new ArrayList<>();
+        for (int i = 0; i < NUM_ITERATION; i++) {
+            long time = runBenchmark(params);
+            performance.add((double) time);
+        }
+        performance.forEach(e -> System.out.println("Time: " + e + " (ms)"));
+        double avg = performance.stream().mapToDouble(d -> d).average().orElse(0.0);
+        double min = performance.stream().min(Comparator.naturalOrder()).orElse(0.0);
+        System.out.println("\nmin: " + min);
+        System.out.println("avg: " + avg);
         System.exit(0);
+    }
+
+    private static long runBenchmark(DirectoryWalkerParams params) throws InterruptedException, ExecutionException {
+        Chrono crono = new Chrono();
+        crono.start();
+        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(params);
+        Future<Report> futureReport = sourceAnalyser.getReport();
+        Report report = futureReport.get(); // report result ignored
+        crono.stop();
+        return crono.getTime();
     }
 }

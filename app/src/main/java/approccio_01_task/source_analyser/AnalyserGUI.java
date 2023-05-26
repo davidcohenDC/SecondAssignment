@@ -200,7 +200,7 @@ public class AnalyserGUI {
         startButton.setEnabled(false);
         stopButton.setEnabled(true);
 
-        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(this.params);
+        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(this.params, poolSize);
         this.future = sourceAnalyser.analyzeSources();
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(poolSize);
         ses.scheduleAtFixedRate(() -> {

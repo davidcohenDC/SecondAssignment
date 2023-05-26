@@ -10,9 +10,9 @@ import java.util.concurrent.Future;
 public class SourceAnalyserImpl implements SourceAnalyser {
     private final DirectoryWalkerParams params;
     private final int poolSize;
-    public SourceAnalyserImpl(DirectoryWalkerParams params) {
+    public SourceAnalyserImpl(DirectoryWalkerParams params, int poolSize) {
         this.params = params;
-        this.poolSize = PerformanceUtils.getDefaultNumThread();
+        this.poolSize = poolSize;
     }
     public Future<Report> getReport() {
         DirectoryWalkerMaster walker = new DirectoryWalkerMaster(this.params, this.poolSize);
