@@ -1,8 +1,4 @@
-import io.vertx.core.*;
-import io.vertx.core.eventbus.EventBus;
-import java.io.File;
-
-public class MainApplication {
+public class Main {
 
     public static void main(String[] args) {
 

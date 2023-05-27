@@ -190,9 +190,6 @@ public class AnalyserGUI {
                 });
             });
         });
-        //eventBus.consumer("all-done",  message -> {
-          //  vertx.close();
-        //});
         SwingUtilities.invokeLater(() -> {
             eventBus.consumer("distributions", results -> {
                 final var distribution = (HashMap<Integer, Integer>) results.body();
@@ -206,8 +203,6 @@ public class AnalyserGUI {
 
     }
 
-
-
     private void stopWalker() {
         eventBus.publish("all-done", 1);
         var future = CompletableFuture.runAsync(() -> {
@@ -215,10 +210,8 @@ public class AnalyserGUI {
         });
         try {
             future.get();
-            System.out.println("Vertex chiuso con successo.");
             this.startButton.setEnabled(true);
         } catch (InterruptedException | ExecutionException e) {
-            System.err.println("Si è verificato un errore durante la chiusura del vertex: " + e.getMessage());
         }
         this.stopButton.setEnabled(false);
     }
@@ -229,18 +222,6 @@ public class AnalyserGUI {
             JOptionPane.showMessageDialog(null, label, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-
-    /*private void handleError(Throwable t) {
-        SwingUtilities.invokeLater(() -> showErrorDialog(t.getMessage()));
-    }
-
-    private void handleOnNext(Pair<String, String> pair) {
-        SwingUtilities.invokeLater(() -> {
-            distributionArea.setText(pair.getLeft());
-            maxFilesArea.setText(pair.getRight());
-        });
-    }*/
-
 
     private void handleCompletion() {
         SwingUtilities.invokeLater(this::stopWalker);

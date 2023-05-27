@@ -56,13 +56,4 @@ public class ComputingVerticle extends AbstractVerticle {
             vertx.close();
         });
     }
-
-    /*public List<FileEntry> getTopFiles() {
-        return this.files.stream().toList();
-    }
-
-    public Map<Integer, Integer> getBuckets() {
-        return IntStream.range(0, this.buckets.length).boxed()
-                .collect(Collectors.toMap(i -> i * this.bucketSize, i -> this.buckets[i]));
-    }*/
 }
