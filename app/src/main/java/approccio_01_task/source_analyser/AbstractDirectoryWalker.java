@@ -6,11 +6,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An abstract class that provides a skeleton implementation of the directory walking functionality
- * for a given directory. Concrete subclasses can extend this class and implement the `walkRec`,
- * `beforeWalk`, and `afterWalk` methods to perform the actual directory walking and file processing,
- * and to perform any necessary setup and cleanup tasks before and after the directory walking.
- * The `AbstractDirectoryWalker` class takes in a `Path` object that represents the directory to be walked,
- * a `Distribution` object that represents the distribution of files based on some criterion, and some other
+ * for a given directory. Concrete subclasses can extend this class and implement the `walkRec`
+ * method to perform the actual directory walking and file processing.
+ * The `AbstractDirectoryWalker` class takes `DirectoryWalkerParams` object that represents the
  * parameters for configuring the directory walking behavior.
  */
 public abstract class AbstractDirectoryWalker implements Walker {
@@ -26,9 +24,7 @@ public abstract class AbstractDirectoryWalker implements Walker {
     }
 
     /**
-     * Starts the directory walking process. This method creates a new thread to perform the
-     * directory walking, waits for the thread to complete, and then calls the `beforeWalk` and
-     * `afterWalk` methods to perform any necessary setup and cleanup tasks.
+     * Starts the directory walking process.
      *
      * @return true if the directory walking is successful, false otherwise
      */
