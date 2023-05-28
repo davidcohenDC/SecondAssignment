@@ -158,6 +158,9 @@ public class AnalyzerGUI {
             return;
         }
 
+        distributionArea.setText("");
+        maxFilesArea.setText("");
+
         int numIntervals;
         try {
             numIntervals = Integer.parseInt(numIntervalsField.getText().trim());
@@ -204,8 +207,8 @@ public class AnalyzerGUI {
 
     private void handleOnNext(Pair<String, String> pair) {
         SwingUtilities.invokeLater(() -> {
-            distributionArea.setText(pair.getLeft());
-            maxFilesArea.setText(pair.getRight());
+            distributionArea.setText(pair.left());
+            maxFilesArea.setText(pair.right());
         });
     }
 

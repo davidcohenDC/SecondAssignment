@@ -34,8 +34,8 @@ public class TestOnConsole {
                 .toList()
                 .blockingSubscribe(
                         pair -> {
-                            System.out.println("Received final distribution: " + pair.get(0).getLeft());
-                            System.out.println("Received final max files: " + pair.get(0).getRight());
+                            System.out.println("Received final distribution: " + pair.get(0).left());
+                            System.out.println("Received final max files: " + pair.get(0).right());
                         },
                         error -> System.err.println("Error occurred: " + error)
                 );

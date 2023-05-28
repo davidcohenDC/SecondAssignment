@@ -1,21 +1,6 @@
 package sourceanalysis;
 
-public class Pair<L, R> {
-    private final L left;
-    private final R right;
-
-    public Pair(L left, R right) {
-        this.left = left;
-        this.right = right;
-    }
-
-    public L getLeft() {
-        return left;
-    }
-
-    public R getRight() {
-        return right;
-    }
+public record Pair<L, R>(L left, R right) {
 
     @Override
     public boolean equals(Object obj) {
@@ -30,13 +15,6 @@ public class Pair<L, R> {
             return false;
         }
         return right.equals(pair.right);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = left.hashCode();
-        result = 31 * result + right.hashCode();
-        return result;
     }
 
     @Override
