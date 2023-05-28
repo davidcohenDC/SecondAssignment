@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 import static java.lang.Integer.parseInt;
 
@@ -24,8 +25,7 @@ public class AnalyserGUI {
     private final JButton stopButton;
     private final JTextArea maxFilesArea;
     private final JTextArea distributionArea;
-    private final Vertx vertx = Vertx.vertx();
-    private EventBus eventBus = vertx.eventBus();
+    private CompletableFuture<Vertx> futureEventBus;
 
     /**
      * Creation of the GUI
@@ -149,9 +149,9 @@ public class AnalyserGUI {
             return;
         }
 
-        int maxLength;
+        int maxLines;
         try {
-            maxLength = parseInt(maxLengthField.getText().trim());
+            maxLines = parseInt(maxLengthField.getText().trim());
         } catch (NumberFormatException e) {
             showErrorDialog("Invalid value for max length: " + maxLengthField.getText().trim());
             return;
@@ -168,7 +168,7 @@ public class AnalyserGUI {
         int numIntervals;
         try {
             numIntervals = parseInt(numIntervalsField.getText().trim());
-            if(numIntervals > maxLength) {
+            if(numIntervals > maxLines) {
                 JOptionPane.showMessageDialog
                         (null, "Invalid value for num intervals: " + numIntervalsField.getText().trim()
                                 +"!!\nValue need to be <= Max Files","Bad value", JOptionPane.ERROR_MESSAGE);
@@ -178,42 +178,38 @@ public class AnalyserGUI {
             showErrorDialog("Invalid value for num intervals: " + numIntervalsField.getText().trim());
             return;
         }
+        SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(directory, maxFiles, numIntervals, maxLines);
+        this.futureEventBus = sourceAnalyser.analyzeSources();
 
-        Path dirPath = Paths.get(directory);
-
-        startButton.setEnabled(false);
-        stopButton.setEnabled(true);
-        vertx.deployVerticle(new StatusChecker(), done -> {
-            vertx.deployVerticle(new ComputingVerticle(parseInt(numIntervalsField.getText()), parseInt(maxLengthField.getText()), parseInt(maxFilesField.getText())), onFinish -> {
-                vertx.deployVerticle(new WalkerVerticle(), onDone -> {
-                    eventBus.publish("file-to-explore", new File(directoryField.getText()));
+        futureEventBus.thenAcceptAsync(vertx -> {
+            SwingUtilities.invokeLater(() -> {
+                vertx.eventBus().consumer("distributions", results -> {
+                    final var distribution = (HashMap<Integer, Integer>) results.body();
+                    distributionArea.setText(distribution.toString().replace("{", " ").replace("}", "").replace(",", "\n").replace("=", "... = "));
+                });
+            });
+            SwingUtilities.invokeLater(() -> {
+                vertx.eventBus().consumer("topFiles", result -> {
+                    final var topFiles = result.body();
+                    maxFilesArea.setText((topFiles.toString()));
                 });
             });
         });
-        SwingUtilities.invokeLater(() -> {
-            eventBus.consumer("distributions", results -> {
-                final var distribution = (HashMap<Integer, Integer>) results.body();
-                distributionArea.setText(distribution.toString().replace("{", " ").replace("}", "").replace(",", "\n").replace("=", "... = "));
-            });
-            eventBus.consumer("topFiles", result -> {
-                final var topFiles = result.body();
-                maxFilesArea.setText((topFiles.toString()));
-            });
-        });
-
+        startButton.setEnabled(false);
+        stopButton.setEnabled(true);
     }
 
     private void stopWalker() {
-        eventBus.publish("all-done", 1);
-        var future = CompletableFuture.runAsync(() -> {
-            vertx.close();
+        futureEventBus.thenAcceptAsync(vertx -> {
+            vertx.eventBus().publish("all-done", 1);
+            var future = CompletableFuture.runAsync(vertx::close);
+            try {
+                future.get();
+                this.startButton.setEnabled(true);
+                this.stopButton.setEnabled(false);
+            } catch (InterruptedException | ExecutionException e) {
+            }
         });
-        try {
-            future.get();
-            this.startButton.setEnabled(true);
-        } catch (InterruptedException | ExecutionException e) {
-        }
-        this.stopButton.setEnabled(false);
     }
 
     private void showErrorDialog(String message) {
@@ -221,9 +217,5 @@ public class AnalyserGUI {
             JLabel label = new JLabel(message);
             JOptionPane.showMessageDialog(null, label, "Error", JOptionPane.ERROR_MESSAGE);
         });
-    }
-
-    private void handleCompletion() {
-        SwingUtilities.invokeLater(this::stopWalker);
     }
 }
