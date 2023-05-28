@@ -24,7 +24,6 @@ public class TestOnConsole {
             System.exit(1);
         }
 
-        //new AnalyserCLI(directory, maxFiles, numIntervals, maxLines);
         SourceAnalyser sourceAnalyser = new SourceAnalyserImpl(directory, maxFiles, numIntervals, maxLines);
         sourceAnalyser.getReport();
     }
