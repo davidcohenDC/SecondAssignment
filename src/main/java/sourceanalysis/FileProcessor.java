@@ -44,6 +44,10 @@ public class FileProcessor {
                                 reportData.computeIfAbsent(interval, k -> new ArrayList<>()).add(path);
 
                                 return new Report(reportData);
+                            })
+                            .onErrorResumeNext(error -> {
+                                System.err.println("Error occurred while processing file: " + path + ", error: " + error.getMessage());
+                                return Flowable.empty();
                             });
                 },
                 Stream::close,
